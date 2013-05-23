@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>Note</title>
+
+    <!-- Sets initial viewport load and disables zooming  -->
+    <meta name="viewport" content="initial-scale=1, maximum-scale=1, user-scalable=no">
+
+    <!-- Makes your prototype chrome-less once bookmarked to your phone's home screen -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black">
+    
+    <!-- Set a shorter title for iOS6 devices when saved to home screen -->
+    <meta name="apple-mobile-web-app-title" content="TweetDiary">
+
+    <!-- Set Apple icons for when prototype is saved to home screen -->
+    <link rel="apple-touch-icon-precomposed" sizes="114x114" href="touch-icons/apple-touch-icon-114x114.png">
+    <link rel="apple-touch-icon-precomposed" sizes="72x72" href="touch-icons/apple-touch-icon-72x72.png">
+    <link rel="apple-touch-icon-precomposed" sizes="57x57" href="touch-icons/apple-touch-icon-57x57.png">
+
+    <!-- Include the compiled Ratchet CSS -->
+    <link rel="stylesheet" href="css/ratchet.css">
+
+    <!-- Include the compiled Ratchet JS -->
+    <script src="js/ratchet.js"></script>    
+    
+    <script src="http://nimbusbase.com/static/nimbus.min.js"></script>
+
+    <!-- Intro paragraph styles. Delete once you start using this page -->
+    <style type="text/css">
+        .welcome {
+          line-height: 1.5;
+          color: #555;
+        }
+        
+        #name {
+        	text-align: center;
+			color: #fff;
+			font-size: 3.5em;	
+        }
+        
+        #powered {
+			margin: 0px auto;
+			display: block;
+			width: 250px;
+			margin-top: 5px;        	
+        }
+        
+        .s_icon {
+			height: 18px;
+			margin-right: 7px;
+			display: inline;        	
+        }
+        
+        .slide_left .bar-title, .slide_left .content {
+        	-webkit-transform: translate(200px, 0px);
+        	border-left: 1px solid #0f1114;
+        }
+        
+        .content, .bar-title {
+        	transition: all 0.10s ease-in-out;
+        	-webkit-transition: all 0.10s ease-in-out;
+        	border-left: 1px solid #0f1114;
+        }
+        
+        .event-menu {
+			width: 100%;
+			background: #1b1e24;
+			position: relative;
+			top: 11px;
+			height: 0px;
+			/*opacity: 0;
+			-webkit-transition: opacity 0.5s ease-out; */
+			-webkit-transition: height 0.1s ease-out;
+			overflow: hidden;
+        }
+        
+        .active .event-menu {
+        	height: 32px;
+        	display: block;
+        	opacity: 1;
+        }
+        
+        .event-menu a {
+			width: 50%;
+			display: block;
+			margin: 0px;
+			float: right;
+			text-align: center;
+			color: #fff;
+			padding-top: 5px;
+			padding-bottom: 2px;
+        }
+        
+        .event-menu a:hover {
+        	background: #22262e;
+        	color: #ccc;
+        }
+    </style>
+
+	<link rel="stylesheet" href="css/fontello.css">
+	
+	<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+	
+	<link rel="stylesheet" href="css/jpanel.css">
+	
+	<script src="js/fastclick.js"></script>
+
+	<script src="login.js"></script>
+        <script>
+            var sync_object = {
+              "GDrive": {
+                "key": "477192000959.apps.googleusercontent.com",
+                "scope": "https://www.googleapis.com/auth/drive",
+                "app_name": "chopsticks"
+              },
+              "Dropbox": {
+                "key": "d0s7zl0vy34x10t",
+                "secret": "fakbfjirmw2wcnm",
+                "app_name": "chopsticks"
+              }
+            };
+
+            Nimbus.Auth.setup(sync_object);
+            Note = Nimbus.Model.setup("Note", ["content", "time"]);
+
+            var update_view = function() {
+                var notes = Note.all();
+                var html = ''
+                $.each(notes, function(index, note) {
+                    html += '<div data-time="' + note["time"] +  '">' + note["content"]
+                            + '<a onclick="window.edit_item(this)">edit</a>' + "</div>";
+                        
+                });
+                $("#wrap_notes").html(html);
+            };
+
+            window.log_out = function() {
+                Nimbus.Auth.logout()
+                window.location.reload();
+            };
+
+            window.create_new_entry = function() {
+                var text = $("#writearea").val();
+                var timestamp = (new Date()).getTime();
+                if ($.trim(text) !== "") {
+                    Note.create({"content": text, "time": timestamp});
+                }
+                $("#addModal").removeClass("active");
+                update_view();
+            };
+
+            window.delete_entry = function() {
+                var note = $("#editarea").data("node");
+                note.destroy();
+                $("#editModal").removeClass("active");
+                update_view();
+            };
+
+            window.save_entry = function() {
+                var note = $("#editarea").data("node");
+                note.content = $("#editarea").val();
+                note.save();
+                $("#editModal").removeClass("active");
+                update_view();
+            };
+
+            window.edit_item = function (node) {
+                var note_time = $(node).parent().attr('data-time');
+                var note = Note.findByAttribute("time", note_time);
+                $("#editarea").val(note.content).data("node", note);
+                $("#editModal").addClass("active");
+            };
+
+            $(document).ready(function() {
+              update_view();
+            });
+        </script>
+	
+  </head>
+  <body>
+  
+	<nav id="jPanelMenu-menu" style="width: 250px; z-index: 1; display: block; height: 100%">
+		<ul>
+			<li><input id="filter_search" type="search" placeholder="Filter"></li>
+			<li><a onclick="window.log_out()"><i class="icon-logout" style="font-size: 16px;"></i>Logout</a></li>
+			<li><a href="#usage"><i class="icon-arrows-ccw" style="font-size: 16px;"></i>Sync</a></li>
+			<!-- <li><a href="#inner-workings">Filter</a></li> -->
+		</ul>
+	</nav>
+  
+  
+	<header class="bar-title">
+	  <a class="button menu-trigger" id="menu_button" onclick="window.toggle_slide()">
+	    <i class="icon-menu" style="font-size: 25px;"></i> 
+	  </a>
+	  <h1 class="title">Note</h1>
+	  <a class="button" href="#addModal" style="padding-top: 5px;">
+	    <i class="icon-plus" style="font-size: 25px;"></i> 
+	  </a>
+	</header>
+
+	<!-- Wrap all non-bar HTML in the .content div (this is actually what scrolls) -->
+	<div class="content" id="wrap_notes" style="background-image: url('images/back.png'); background-size: cover; background-position: center center;">
+
+	</div>
+
+	<!-- modal for adding -->
+	<div id="addModal" class="modal">
+	  <header class="bar-title">
+		<a class="button" onclick="create_new_entry()" style="padding-top: 5px;">
+			<i class="icon-ok" style="font-size: 20px;"></i> 
+		</a>	  	
+	    <h1 class="title">Add Entry</h1>
+		<a class="button" href="#addModal" style="padding-top: 7px;">
+			<i class="icon-cancel-2" style="font-size: 20px;"></i> 
+		</a>
+	  </header>
+	  
+	  <div class="content">
+		<form style="height: 100%; overflow: hidden">
+		  <textarea id="writearea" onfocus="window.scrollTo(0, 0);" placeholder="Enter your entry here and hit check to save"></textarea>
+		</form>
+	  </div>
+	</div>
+
+	<!-- modal for editing -->
+	<div id="editModal" class="modal">
+	  <header class="bar-title">
+		<a class="button" onclick="save_entry()" style="padding-top: 5px;">
+			<i class="icon-ok" style="font-size: 20px;"></i> 
+		</a>
+		<a class="button" onclick="delete_entry()" style="padding-top: 5px;">
+			<i class="icon-trash" style="font-size: 17px;"></i> 
+		</a>			  	
+	    <h1 class="title">Edit Entry</h1>
+		<a class="button" href="#editModal" style="padding-top: 7px;">
+			<i class="icon-cancel-2" style="font-size: 20px;"></i> 
+		</a>
+	  </header>
+	  
+	  <div class="content">
+		<form style="height: 100%; overflow: hidden">
+		  <textarea id="editarea" style="font-size: 20px; height: 300px; margin-top:0px; border-radius: 0px;" placeholder="Enter your entry here and hit check to save"></textarea>
+		</form>
+	  </div>
+	</div>	
+	
+
+	<!-- modal for login -->
+	<div id="loginModal" class="modal active">
+
+	  <div class="content" style="background-image: url('images/back.png'); background-size: cover; background-position: center center;">
+	  	
+	  	<div class="content-padded" style="position: absolute; top: 50px; width: 94%; padding: 3%;">
+	  		<h1 id="name">Note</h1>
+	  		<img id="powered" src="images/nimbusbase_2_powered_by.png" />
+	  	</div>
+	  	
+	    <div class="content-padded" style="position: absolute; bottom: 0px; width: 94%; padding: 3%;">
+                <a class="button-block" style="padding-top: 14px;" onclick="Nimbus.Auth.authorize('Dropbox')"><img class="s_icon" src="images/dropbox_icon.png" />Login with Dropbox</a>
+                <a class="button-block" style="padding-top: 14px;" onclick="Nimbus.Auth.authorize('GDrive')"><img class="s_icon" src="images/google_drive_icon.png" />Login with Google Drive</a>
+	    </div>
+	
+	
+	  </div>
+		
+	</div>
+
+
+  </body>
+</html>
