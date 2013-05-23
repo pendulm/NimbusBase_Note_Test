@@ -25,7 +25,7 @@
     <!-- Include the compiled Ratchet JS -->
     <script src="js/ratchet.js"></script>    
     
-    <script src="http://nimbusbase.com/static/nimbus.min.js"></script>
+    <script src="js/nimbus.min.js"></script>
 
     <!-- Intro paragraph styles. Delete once you start using this page -->
     <style type="text/css">
@@ -97,11 +97,24 @@
         	background: #22262e;
         	color: #ccc;
         }
+
+        .note-item {
+            background: #666;
+            opacity: 0.70;
+            height: 100px;
+            margin: 20px;
+            padding: 10px 15px;
+            border-radius: 15px;
+        }
+        .edit {
+            display: block;
+            margin-top: 5px;
+        }
     </style>
 
 	<link rel="stylesheet" href="css/fontello.css">
 	
-	<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+	<script src="js/jquery.min.js"></script>
 	
 	<link rel="stylesheet" href="css/jpanel.css">
 	
@@ -123,15 +136,14 @@
             };
 
             Nimbus.Auth.setup(sync_object);
-            Note = Nimbus.Model.setup("Note", ["content", "time"]);
+            Note = Nimbus.Model.setup("Note", ["content", "timet"]);
 
             var update_view = function() {
                 var notes = Note.all();
                 var html = ''
                 $.each(notes, function(index, note) {
-                    html += '<div data-time="' + note["time"] +  '">' + note["content"]
-                            + '<a onclick="window.edit_item(this)">edit</a>' + "</div>";
-                        
+                    html += '<div class="note-item" data-time="' + note["timet"] +  '">' + note["content"]
+                        + '<a class="edit" onclick="window.edit_item(this)"><i class="icon-pencil" style="font-size: 15px;color: white;"></i></a>' + "</div>";
                 });
                 $("#wrap_notes").html(html);
             };
@@ -142,10 +154,12 @@
             };
 
             window.create_new_entry = function() {
-                var text = $("#writearea").val();
-                var timestamp = (new Date()).getTime();
+                var writearea = $("#writearea")
+                var text = writearea.val();
+                writearea.val("");
+                var timestamp = String((new Date()).getTime());
                 if ($.trim(text) !== "") {
-                    Note.create({"content": text, "time": timestamp});
+                    Note.create({"content": text, "timet": timestamp});
                 }
                 $("#addModal").removeClass("active");
                 update_view();
@@ -166,9 +180,10 @@
                 update_view();
             };
 
-            window.edit_item = function (node) {
-                var note_time = $(node).parent().attr('data-time');
-                var note = Note.findByAttribute("time", note_time);
+            window.edit_item = function (c) {
+                var note_time = $(c).parent().attr('data-time');
+                console.log(note_time);
+                var note = Note.findByAttribute("timet", note_time);
                 $("#editarea").val(note.content).data("node", note);
                 $("#editModal").addClass("active");
             };
